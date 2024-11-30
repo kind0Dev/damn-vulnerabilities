@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+
 import "@safe-global/safe-smart-account/contracts/common/Enum.sol";
 import "@safe-global/safe-smart-account/contracts/proxies/SafeProxyFactory.sol";
 
