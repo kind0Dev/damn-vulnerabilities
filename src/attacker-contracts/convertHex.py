@@ -93,3 +93,58 @@ result1 = convert_hex_to_uint256(key1)
 
 print("\nConverting Key 2:")
 result2 = convert_hex_to_uint256(key2)
+
+
+""" 
+This section is for Curvy Puppet Chanllenge it about the virtual_price calculation 
+"""
+
+
+def calculate_D(xp, amp, N_COINS):
+    S = sum(xp)  # total sum of balances
+    if S == 0:
+        return 0
+
+    D = S  # Initial guess for D
+    Ann = amp * N_COINS  # Amplification coefficient
+
+    for _ in range(255):  # Iterate to convergence
+        D_P = D
+        for x in xp:
+            D_P = D_P * D // (x * N_COINS + 1)  # Adjust D_P for balances
+
+        D_prev = D
+        numerator = (Ann * S // A_PRECISION + D_P * N_COINS) * D
+        denominator = ((Ann - A_PRECISION) * D // A_PRECISION + (N_COINS + 1) * D_P)
+        D = numerator // denominator
+
+        # Convergence check
+        if abs(D - D_prev) <= 1:
+            return D
+
+    raise ValueError("D did not converge")
+
+
+
+
+xp = [23567_652834372746200869 + 200000* 10**18, 28830_973314825299545839 ]  # balances of assets
+amp = 90000  # amplification factor
+N_COINS = 2  # number of coins in the pool
+A_PRECISION = 100  # precision factor
+total_supply_lp = 47392_443867221892576908 # total supply of LP tokens
+
+# Calculate D and virtual price
+D = calculate_D(xp, amp, N_COINS)
+virtual_price = D * 10**18 // total_supply_lp  # Normalize to precision 1e18
+
+print(D)
+print(virtual_price)
+
+1_105626245417432119
+1_115669380952564000
+5_321378110663952943
+1_105626245417432119
+
+1_188505189824270346
+3_50642196485123253423
+1_000000000000000000
