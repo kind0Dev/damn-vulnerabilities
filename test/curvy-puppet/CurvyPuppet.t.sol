@@ -204,7 +204,10 @@ contract CurvyPuppetChallenge is Test {
         
         // Paying back flashloan 
         address flashloan = makeAddr("flashloan");
-        flashloan.call{value: player.balance}("");
+        (bool success, ) = flashloan.call{value: player.balance}("");
+        if(!success){
+            revert();
+        }
         
 
         
