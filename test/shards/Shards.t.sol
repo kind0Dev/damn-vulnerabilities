@@ -12,12 +12,16 @@ import {
 } from "../../src/shards/ShardsNFTMarketplace.sol";
 import {DamnValuableStaking} from "../../src/DamnValuableStaking.sol";
 
+import {ShardExploit} from "../../src/attacker-contracts/ShardExploit.sol";
+
+
 contract ShardsChallenge is Test {
     address deployer = makeAddr("deployer");
     address player = makeAddr("player");
     address seller = makeAddr("seller");
     address oracle = makeAddr("oracle");
     address recovery = makeAddr("recovery");
+    
 
     uint256 constant STAKING_REWARDS = 100_000e18;
     uint256 constant NFT_SUPPLY = 50;
@@ -114,6 +118,13 @@ contract ShardsChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_shards() public checkSolvedByPlayer {
+
+        // Deploy exploit contract
+        ShardExploit shardExploit = new ShardExploit(marketplace,token,recovery);
+        // Call attack function
+        shardExploit.attack(1);
+        console.log("recovery balance",token.balanceOf(address(recovery)));
+
         
     }
 
