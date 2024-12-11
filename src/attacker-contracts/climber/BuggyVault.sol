@@ -14,7 +14,6 @@ import "../../climber/ClimberTimelock.sol";
  * @author Damn Vulnerable DeFi (https://damnvulnerabledefi.xyz)
  */
 contract BuggyVault is Initializable, OwnableUpgradeable, UUPSUpgradeable {
-
     uint256 public constant WITHDRAWAL_LIMIT = 1 ether;
     uint256 public constant WAITING_PERIOD = 15 days;
 
@@ -29,7 +28,7 @@ contract BuggyVault is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() initializer {}
 
-    function initialize(address admin, address proposer, address sweeper) initializer external {
+    function initialize(address admin, address proposer, address sweeper) external initializer {
         // Initialize inheritance chain
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
@@ -46,7 +45,7 @@ contract BuggyVault is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     function withdraw(address tokenAddress, address recipient, uint256 amount) external onlyOwner {
         require(amount <= WITHDRAWAL_LIMIT, "Withdrawing too much");
         require(block.timestamp > _lastWithdrawalTimestamp + WAITING_PERIOD, "Try later");
-        
+
         _setLastWithdrawal(block.timestamp);
 
         IERC20 token = IERC20(tokenAddress);
@@ -76,5 +75,5 @@ contract BuggyVault is Initializable, OwnableUpgradeable, UUPSUpgradeable {
     }
 
     // By marking this internal function with `onlyOwner`, we only allow the owner account to authorize an upgrade
-    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {}
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 }

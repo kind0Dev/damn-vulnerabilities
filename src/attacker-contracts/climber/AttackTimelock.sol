@@ -18,7 +18,6 @@ contract AttackTimelock {
 
     bytes32 salt = keccak256("attack proposal");
 
-
     constructor(address _vault, address payable _timelock, address _token, address _owner) {
         vault = _vault;
         timelock = _timelock;

@@ -9,7 +9,6 @@ import {DamnValuableToken} from "../../src/DamnValuableToken.sol";
 import {WalletRegistry} from "../../src/backdoor/WalletRegistry.sol";
 import {BackdoorAttack} from "../../src/attacker-contracts/BackdoorAttack.sol";
 
-
 contract BackdoorChallenge is Test {
     address deployer = makeAddr("deployer");
     address player = makeAddr("player");
@@ -72,23 +71,15 @@ contract BackdoorChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_backdoor() public checkSolvedByPlayer {
+        BackdoorAttack bkAttack = new BackdoorAttack(
+            player, address(walletFactory), address(singletonCopy), address(walletRegistry), address(token), users
+        );
 
-   
-    BackdoorAttack bkAttack = new BackdoorAttack(
-        player,
-        address(walletFactory),
-        address(singletonCopy),
-        address(walletRegistry),
-        address(token),
-        users
-    );
+        console.log(token.balanceOf(player));
 
-    console.log(token.balanceOf(player));
+        token.transfer(recovery, AMOUNT_TOKENS_DISTRIBUTED);
 
-    token.transfer(recovery, AMOUNT_TOKENS_DISTRIBUTED);
-
-    console.log(token.balanceOf(player));
-        
+        console.log(token.balanceOf(player));
     }
 
     /**

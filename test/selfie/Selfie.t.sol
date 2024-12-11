@@ -64,14 +64,12 @@ contract SelfieChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_selfie() public checkSolvedByPlayer {
-
         SelfieExploit selfiExploit = new SelfieExploit(address(pool), address(token), recovery);
 
         selfiExploit.attack();
         vm.warp(2 days + 2);
 
         governance.executeAction(1);
-        
     }
 
     /**

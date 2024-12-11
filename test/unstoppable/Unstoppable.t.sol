@@ -91,11 +91,9 @@ contract UnstoppableChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_unstoppable() public checkSolvedByPlayer {
-
-    // Transfer tokens directly to the vault without using deposit() even as little as 1 wei
-    // This breaks the assumption that totalAssets() should equal convertToShares(totalSupply)
-        token.transfer(address(vault), 1); 
-        
+        // Transfer tokens directly to the vault without using deposit() even as little as 1 wei
+        // This breaks the assumption that totalAssets() should equal convertToShares(totalSupply)
+        token.transfer(address(vault), 1);
     }
 
     /**

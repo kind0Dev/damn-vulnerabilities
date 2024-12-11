@@ -20,7 +20,7 @@ contract PermissionedDonationVault is ReentrancyGuard {
 
     mapping(address => mapping(bytes32 => bool)) public hasRole;
     mapping(bytes4 => bool) public isAllowedFunction;
-    
+
     uint256 public constant MAX_DONATION = 100 ether;
     uint256 public immutable COOLDOWN_PERIOD;
     uint256 private lastActionTimestamp;
@@ -36,7 +36,7 @@ contract PermissionedDonationVault is ReentrancyGuard {
     constructor(uint256 cooldownPeriod) {
         COOLDOWN_PERIOD = cooldownPeriod;
         lastActionTimestamp = block.timestamp;
-        
+
         // Set up allowed functions
         isAllowedFunction[0xe69d849d] = true;
         isAllowedFunction[0xd94f44f1] = true;
@@ -84,7 +84,7 @@ contract PermissionedDonationVault is ReentrancyGuard {
     function donate(address token, uint256 amount) external {
         if (msg.sender != address(this)) revert Unauthorized();
         if (amount > MAX_DONATION) revert InvalidAmount();
-        
+
         SafeTransferLib.safeTransferFrom(token, tx.origin, address(this), amount);
         emit DonationReceived(tx.origin, amount);
     }
